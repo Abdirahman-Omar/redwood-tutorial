@@ -9,6 +9,8 @@ import {
   Submit,
 } from '@redwoodjs/forms'
 import { useMutation } from '@redwoodjs/web'
+import { QUERY as CommentsQuery } from 'src/components/CommentsCell'
+import { useState } from 'react'
 
 const CREATE = gql`
   mutation CreateCommentMutation($input: CreateCommentInput!) {
@@ -21,16 +23,34 @@ const CREATE = gql`
   }
 `
 
-const CommentForm = () => {
-  const [createComment, { loading, error }] = useMutation(CREATE)
+const CommentForm = ({ postId }) => {
+  const [hasPosted, setHasPosted] = useState(false)
 
-  const onSubmit = () => {
-    createComment({ variables: { input } })
+  const [createComment, { loading, error }] = useMutation(CREATE, {
+    onCompleted: () => {
+      setHasPosted(true)
+    },
+    refetchQueries: [{ query: CommentsQuery, variables: { postId } }],
+  })
+
+  const onSubmit = (input) => {
+    createComment({ variables: { input: { postId, ...input } } })
   }
+
   return (
-    <div>
+    <div className="relative">
       <h3 className="font-light text-lg text-gray-600">Leave a Comment</h3>
-      <Form className="mt-4 w-full">
+      <div
+        className={`${
+          hasPosted ? 'absolute' : 'hidden'
+        } flex items-center justify-center w-full h-full text-lg`}
+      >
+        <h4 className="text-green-500">Thank you for your comment!</h4>
+      </div>
+      <Form
+        className={`mt-4 w-full ${hasPosted ? 'invisible' : ''}`}
+        onSubmit={onSubmit}
+      >
         <FormError
           error={error}
           titleClassName="font-semibold"

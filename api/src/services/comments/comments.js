@@ -1,7 +1,8 @@
+import { requireAuth } from 'src/lib/auth'
 import { db } from 'src/lib/db'
 
-export const comments = () => {
-  return db.comment.findMany()
+export const comments = ({ postId }) => {
+  return db.comment.findMany({ where: { postId } })
 }
 
 export const Comment = {
@@ -16,6 +17,7 @@ export const createComment = ({ input }) => {
 }
 
 export const deleteComment = ({ id }) => {
+  requireAuth({ roles: 'moderator' })
   return db.comment.delete({
     where: { id },
   })
